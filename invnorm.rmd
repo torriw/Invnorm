@@ -1,0 +1,88 @@
+---
+title: "Untitled"
+output: html_document
+date: "2023-05-10"
+---
+
+```{r }
+setwd("C:/Users/torriw/Desktop/ALDH1L1_project/ald_p_extract")
+```
+
+
+```{r }
+dasiigcaperc<-read.delim("neuro_dasiigcaperc.txt")
+dasiigcaperc<-as.list(dasiigcaperc)
+
+#inverse normalization transformation function
+inormal <- function(x) 
+{   qnorm((rank(x, na.last = "keep") - 0.5) / sum(!is.na(x))) }
+#pass the argument as the list of nb values
+norm<-inormal(dasiigcaperc$dasiigcaperc)
+norm<-data.frame(norm)
+das<-cbind(dasiigcaperc$IID,norm)
+write.csv(das,"C:/Users/torriw/Desktop/ALDH1L1_project/ald_p_extract/norm_das.csv",row.names = F)
+
+```
+
+
+```{r read in list of neuro names & original neuro list to pull out endpoints }
+nb_list<-read.delim("new_neuro_list.txt")
+#create new df with all nb's from list 
+
+neuro<-read.delim("04_neuro.txt")
+
+# package to use the not in '%nin%' function
+library(Hmisc)
+ 
+
+neuro_match<- neuro[,colnames(neuro) %in% nb_list$NB]
+write.csv(neuro_match,"C:/Users/torriw/Desktop/ALDH1L1_project/ald_p_extract/raw_neuro_match.csv", row.names = F)
+# neuro_not<- nb_list[nb_list$NB %nin% colnames(neuro_match),] 
+whole_neuro_not<- nb_list[nb_list$NB %nin% colnames(neuro),]
+whole_neuro_not<-data.frame(whole_neuro_not)
+write.csv(whole_neuro_not,"C:/Users/torriw/Desktop/ALDH1L1_project/ald_p_extract/whole_neuro_not.csv", row.names = F)
+```
+
+
+```{r install dplyr and run function -- run across all behaviors using mutatate()}
+library(dplyr)
+all_behaviors_norm2 <- mutate(neuro_match, across(everything(), inormal))
+```
+
+
+```{r write out new data frame}
+all_behaviors_norm2<-cbind(neuro$IID,all_behaviors_norm2)
+write.csv(all_behaviors_norm2,"C:/Users/torriw/Desktop/ALDH1L1_project/ald_p_extract/invnorm_neuro.csv",row.names = F )
+
+```
+
+```{r }
+cifasd2<-read.csv("C:/Users/torriw/Desktop/ALDH1L1_project/ald_p_extract/CIFASDCRPhase2-NeurobehaviorPhase2_DATA_2019-09-27_1327.csv")
+cifasd3<-read.csv("C:/Users/torriw/Desktop/ALDH1L1_project/ald_p_extract/CIFASDCRPhase3-NeurobehaviorPhase3_DATA_2019-09-30_1304.csv")
+
+cif3_list<-read.delim("cif3list.txt")
+cif2_list<-read.delim("cif2list.txt")
+
+#break down data sheet by sample names
+cifasd2<-subset(cifasd2,subjectid %in% neuro$IID)
+cifasd3<-subset(cifasd3,subjectid %in% neuro$IID)
+
+#break down data sheet by behavioral names
+cif2_match<-data.frame(cifasd2[,colnames(cifasd2) %in% cif2_list$cifasd2])
+cif2_match<-cbind(cifasd2$subjectid,cif2_match)
+cif3_match<-data.frame(cifasd3[,colnames(cifasd3) %in% cif3_list$cifasd3])
+cif3_match<-cbind(cifasd3$subjectid,cif3_match)
+
+#remove duplicate samples
+cif2dups<-cif2_match[!duplicated(cif2_match$`cifasd2$subjectid`),]
+cif3dups<-cif3_match[!duplicated(cif3_match$`cifasd3$subjectid`),]
+
+write.csv(cif2dups,"C:/Users/torriw/Desktop/ALDH1L1_project/ald_p_extract/cif2dups.csv", row.names = F)
+write.csv(cif3dups,"C:/Users/torriw/Desktop/ALDH1L1_project/ald_p_extract/cif3dups.csv", row.names = F)
+```
+
+
+```{r }
+
+
+```
